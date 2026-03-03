@@ -190,7 +190,7 @@ let LineOAuthService = class LineOAuthService {
             redirectUri = `${process.env.FRONTEND_URL}/auth/line/callback`;
         }
         if (!redirectUri && (process.env.NODE_ENV === 'production' || !process.env.NODE_ENV)) {
-            redirectUri = 'https://qa-rp-trr-ku-csc.vercel.app/auth/line/callback';
+            redirectUri = 'https://trritrp.vercel.app/auth/line/callback';
         }
         if (!redirectUri) {
             redirectUri = 'http://localhost:3000/auth/line/callback';

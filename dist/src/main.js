@@ -65,8 +65,8 @@ async function bootstrap() {
     const allowedOrigins = [
         'http://localhost:3000',
         'http://localhost:3001',
-        'https://rp-trr-ku-csc-2026.vercel.app',
-        'https://qa-rp-trr-ku-csc.vercel.app',
+        'https://trritrp.vercel.app/',
+        'https://trritrp.vercel.app',
         ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
     ];
     app.enableCors({

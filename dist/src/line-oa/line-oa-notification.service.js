@@ -198,7 +198,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
             hour: '2-digit', minute: '2-digit',
             timeZone: 'Asia/Bangkok',
         }).format(new Date());
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
@@ -534,7 +534,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
             hour: '2-digit', minute: '2-digit',
             timeZone: 'Asia/Bangkok',
         }).format(new Date(payload.createdAt));
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
@@ -684,7 +684,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
             hour: '2-digit', minute: '2-digit',
             timeZone: 'Asia/Bangkok',
         }).format(new Date());
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
@@ -835,7 +835,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
             hour: '2-digit', minute: '2-digit',
             timeZone: 'Asia/Bangkok',
         }).format(payload.completedAt || new Date());
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
@@ -977,7 +977,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
             hour: '2-digit', minute: '2-digit',
             timeZone: 'Asia/Bangkok',
         }).format(payload.cancelledAt || new Date());
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
@@ -1303,7 +1303,7 @@ let LineOANotificationService = LineOANotificationService_1 = class LineOANotifi
         };
     }
     createCheckStatusCarousel(tickets, page = 1, pageSize = 3) {
-        let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
         try {
             frontendUrl = new URL(frontendUrl).origin;
         }
