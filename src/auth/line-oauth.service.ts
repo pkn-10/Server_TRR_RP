@@ -274,7 +274,7 @@ export class LineOAuthService {
     if (!redirectUri && (process.env.NODE_ENV === 'production' || !process.env.NODE_ENV)) {
         // Check if we are likely in the QA environment based on other signals or just default to it if nothing else is set
         // This is a safety net for the specific user request
-         redirectUri = 'https://qa-rp-trr-ku-csc.vercel.app/auth/line/callback';
+         redirectUri = 'https://trritrp.vercel.app/auth/line/callback';
     }
 
     if (!redirectUri) {

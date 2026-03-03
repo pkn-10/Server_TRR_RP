@@ -338,7 +338,7 @@ export class LineOANotificationService {
       timeZone: 'Asia/Bangkok',
     }).format(new Date());
 
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try {
       frontendUrl = new URL(frontendUrl).origin;
     } catch (e) {}
@@ -741,7 +741,7 @@ export class LineOANotificationService {
     }).format(new Date(payload.createdAt));
 
     // Build action buttons
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try {
       frontendUrl = new URL(frontendUrl).origin;
     } catch (e) {}
@@ -895,7 +895,7 @@ export class LineOANotificationService {
       timeZone: 'Asia/Bangkok',
     }).format(new Date());
 
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try {
       frontendUrl = new URL(frontendUrl).origin;
     } catch (e) {}
@@ -1049,7 +1049,7 @@ export class LineOANotificationService {
       timeZone: 'Asia/Bangkok',
     }).format(payload.completedAt || new Date());
 
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try {
       frontendUrl = new URL(frontendUrl).origin;
     } catch (e) {}
@@ -1194,7 +1194,7 @@ export class LineOANotificationService {
       timeZone: 'Asia/Bangkok',
     }).format(payload.cancelledAt || new Date());
 
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try {
       frontendUrl = new URL(frontendUrl).origin;
     } catch (e) {}
@@ -1546,7 +1546,7 @@ export class LineOANotificationService {
    * เน้นการใช้อินเตอร์เฟซที่สะอาด (Whitespace) และสีที่สดใสในจุดที่จำเป็น
    */
   createCheckStatusCarousel(tickets: any[], page = 1, pageSize = 3): any {
-    let frontendUrl = process.env.FRONTEND_URL || 'https://qa-rp-trr-ku-csc.vercel.app';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://trritrp.vercel.app';
     try { frontendUrl = new URL(frontendUrl).origin; } catch (e) {}
 
     const totalTickets = tickets.length;
