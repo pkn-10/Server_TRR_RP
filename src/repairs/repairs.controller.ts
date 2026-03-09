@@ -1,3 +1,4 @@
+// ===== API แจ้งซ่อม | Repair Ticket Controller =====
 import {
   Controller,
   Get,
@@ -17,6 +18,7 @@ import {
   ParseIntPipe,
   UseGuards,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -26,7 +28,6 @@ import { UpdateRepairTicketDto } from './dto/update-repair-ticket.dto';
 import {
   RepairTicketStatus,
   UrgencyLevel,
-  ProblemCategory,
   Role
 } from '@prisma/client';
 import { LineOANotificationService } from '../line-oa/line-oa-notification.service';
@@ -44,20 +45,21 @@ export class RepairsController {
   ) {}
 
   /* =====================================================
-      LIFF : Create Ticket (Public)
+       LIFF : Create Ticket (Public)
   ===================================================== */
 
   @SetMetadata('isPublic', true)
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // Stricter: 5 requests per minute for public form
   @Post('liff/create')
   @UseInterceptors(FilesInterceptor('files', 3))
+  // สร้างรายการแจ้งซ่อมผ่านหน้า LIFF (Public/Guest) | Create repair ticket via LIFF
   async createFromLiff(
     @Req() req: any,
     @Body() body: Record<string, any>,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
     try {
-      // Sanitize all string inputs to prevent XSS
+      // กำจัดช่องโหว่ XSS 
       const sanitize = (str: string | undefined): string =>
         str ? str.replace(/<[^>]*>/g, '').trim() : '';
 
@@ -78,7 +80,7 @@ export class RepairsController {
         dto.problemTitle = rawTitle;
       }
 
-      // SECURITY: Verify LINE Access Token to prevent forgery
+      // ตรวจสอบ LINE Access Token เพื่อป้องกันการปลอมแปลง 
       const accessToken = body.accessToken;
       let validatedLineUserId: string | undefined;
 
@@ -105,18 +107,12 @@ export class RepairsController {
 
       dto.reporterLineId = validatedLineUserId || 'Guest';
 
-      // SECURITY: Validate phone format (10 digits starting with 0)
+      // ตรวจสอบรูปแบบเบอร์โทรศัพท์ 
       const phoneRegex = /^0\d{9}$/;
       if (dto.reporterPhone && !phoneRegex.test(dto.reporterPhone)) {
         this.logger.warn(`Invalid phone format rejected: ${dto.reporterPhone}`);
         dto.reporterPhone = '';
       }
-
-      dto.problemCategory = Object.values(ProblemCategory).includes(
-        body.problemCategory,
-      )
-        ? body.problemCategory
-        : ProblemCategory.OTHER;
 
       dto.urgency = Object.values(UrgencyLevel).includes(body.urgency)
         ? body.urgency
@@ -130,7 +126,7 @@ export class RepairsController {
         body.pictureUrl,
       );
 
-      // Create ticket with validated lineUserId for direct LINE notifications
+      // สร้างรายการแจ้งซ่อมพร้อม LINE notifications 
       return await this.repairsService.create(user.id, dto, files, validatedLineUserId);
     } catch (error: any) {
       this.logger.error(`LIFF Create Error: ${error.message}`, error.stack);
@@ -154,6 +150,7 @@ export class RepairsController {
 
   @SetMetadata('isPublic', true)
   @Get('liff/ticket/:code')
+  // ดึงข้อมูลรายการแจ้งซ่อมสำหรับแสดงผลในหน้า LIFF 
   async getTicketForLiff(
     @Param('code') code: string,
     @Query('lineUserId') lineUserId: string,
@@ -190,6 +187,7 @@ export class RepairsController {
 
   @SetMetadata('isPublic', true)
   @Get('liff/my-tickets')
+  // ดึงรายการแจ้งซ่อมทั้งหมดของผู้ใช้รายนั้นๆ สำหรับ LIFF 
   async getLiffUserTickets(@Query('lineUserId') lineUserId: string) {
     if (!lineUserId) {
       throw new HttpException(
@@ -210,6 +208,7 @@ export class RepairsController {
 
   @SetMetadata('isPublic', true)
   @Get('liff/ticket-public/:code')
+  // ดึงข้อมูลใบแจ้งซ่อมแบบสาธารณะ (ไม่ต้องใช้ Login) 
   async getTicketPublic(@Param('code') code: string) {
     try {
       const ticket = await this.repairsService.findByCode(code);
@@ -232,12 +231,15 @@ export class RepairsController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  // ดึงข้อมูลรายการแจ้งซ่อมทั้งหมด (พร้อม Filter) 
   async findAll(
     @Req() req,
     @Query('status') status?: RepairTicketStatus,
     @Query('urgency') urgency?: UrgencyLevel,
     @Query('assignedTo') assignedTo?: string,
     @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     const user = req.user;
 
@@ -248,12 +250,15 @@ export class RepairsController {
       urgency,
       assignedTo: assignedTo ? Number(assignedTo) : undefined,
       limit: limit ? Number(limit) : undefined,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
     });
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('files', 3))
+  // สร้างรายการแจ้งซ่อมใหม่ (Authenticated) 
   async create(
     @Req() req: any,
     @Body() dto: CreateRepairTicketDto,
@@ -264,18 +269,21 @@ export class RepairsController {
 
   @Get('schedule')
   @UseGuards(JwtAuthGuard)
+  // ดึงข้อมูลตารางเวลาการซ่อม 
   async getSchedule() {
     return this.repairsService.getSchedule();
   }
 
   @Get('statistics/overview')
   @UseGuards(JwtAuthGuard)
+  // ดึงข้อมูลสถิติภาพรวม 
   async getStatistics() {
     return this.repairsService.getStatistics();
   }
 
   @Get('statistics/dashboard')
   @UseGuards(JwtAuthGuard)
+  // ดึงข้อมูลสถิติสำหรับหน้า Dashboard 
   async getDashboardStatistics(
     @Query('filter') filter: 'day' | 'week' | 'month' = 'day',
     @Query('date') dateStr?: string,
@@ -288,6 +296,7 @@ export class RepairsController {
 
   @Get('statistics/by-department')
   @UseGuards(JwtAuthGuard)
+  // ดึงสถิติการแจ้งซ่อมแยกตามแผนก 
   async getDepartmentStatistics(
     @Query('filter') filter?: 'day' | 'week' | 'month',
     @Query('date') dateStr?: string,
@@ -298,18 +307,21 @@ export class RepairsController {
 
   @Get('user/my-tickets')
   @UseGuards(JwtAuthGuard)
+  // ดึงรายการแจ้งซ่อมของผู้ใช้งานปัจจุบัน 
   async getUserTickets(@Req() req: any) {
     return this.repairsService.getUserTickets(req.user.id);
   }
 
   @Get('code/:code')
   @UseGuards(JwtAuthGuard)
+  // ค้นหาใบแจ้งซ่อมด้วย Ticket Code 
   async findByCode(@Param('code') code: string) {
     return this.repairsService.findByCode(code);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  // ดึงข้อมูลใบแจ้งซ่อมตาม ID 
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.repairsService.findOne(id);
   }
@@ -317,6 +329,7 @@ export class RepairsController {
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('files', 5))
+  // อัปเดตข้อมูลใบแจ้งซ่อม 
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateRepairTicketDto,
@@ -340,6 +353,7 @@ export class RepairsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  // ลบใบแจ้งซ่อมออกจากระบบ (Hard Delete) 
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
@@ -349,5 +363,47 @@ export class RepairsController {
       throw new ForbiddenException('Permission denied: Only ADMIN or IT can delete repair tickets');
     }
     return this.repairsService.remove(id);
+  }
+
+  // ลบใบแจ้งซ่อมแบบกลุ่มตามช่วงเวลา (Bulk Delete)
+  @Delete('bulk-delete/by-date')
+  @UseGuards(JwtAuthGuard)
+  @SetMetadata('roles', [Role.ADMIN])
+  async bulkDeleteByDate(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Req() req: any,
+  ) {
+    if (!startDate || !endDate) {
+      throw new BadRequestException('Both startDate and endDate are required for bulk deletion');
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+
+    return this.repairsService.removeByDateRange(start, end);
+  }
+
+  // ลบใบแจ้งซ่อมแบบกลุ่มตามรายการ ID (Bulk Delete by IDs)
+  @Delete('bulk-delete/by-ids')
+  @UseGuards(JwtAuthGuard)
+  async bulkDeleteByIDs(
+    @Body('ids') ids: number[],
+    @Req() req: any,
+  ) {
+    // SECURITY: Only ADMIN and IT can bulk delete tickets
+    if (req.user.role !== Role.ADMIN && req.user.role !== Role.IT) {
+      throw new ForbiddenException('Permission denied: Only ADMIN or IT can delete repair tickets');
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new BadRequestException('An array of IDs is required for bulk deletion');
+    }
+
+    return this.repairsService.removeMany(ids.map(id => Number(id)));
   }
 }

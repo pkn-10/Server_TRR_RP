@@ -1,3 +1,4 @@
+// ===== เซิร์ฟเวอร์ =====
 import 'dotenv/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestFactory, HttpAdapterHost } from '@nestjs/core';
@@ -40,7 +41,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://trritrp.vercel.app/',
+    'https://rp-trr-ku-csc-2026.vercel.app',
     'https://trritrp.vercel.app',
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
   ];
@@ -66,13 +67,15 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      
+      forbidNonWhitelisted: true,
     }),
   );
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(port);
-  console.log(`เซิฟเวอร์ทำงานที่: ${await app.getUrl()}`);
+  const logger = new Logger('Bootstrap');
+  const url = await app.getUrl();
+  logger.log(`เซิฟเวอร์ทำงานที่: ${url}`);
 }
 
 bootstrap();

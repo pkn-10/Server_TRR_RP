@@ -1,8 +1,11 @@
+// ===== ระบบแจ้งซ่อม | Repair Ticket Service =====
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { RepairTicketStatus, UrgencyLevel } from '@prisma/client';
+import { RepairTicketStatus, UrgencyLevel, Prisma } from '@prisma/client';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { LineOANotificationService } from '../line-oa/line-oa-notification.service';
+import { CreateRepairTicketDto } from './dto/create-repair-ticket.dto';
+import { UpdateRepairTicketDto } from './dto/update-repair-ticket.dto';
 import * as path from 'path';
 
 // Security: Allowed file types and size limits
@@ -103,7 +106,8 @@ export class RepairsService {
     return `${prefix}${sequenceStr}`;
   }
 
-  async create(userId: number, dto: any, files?: Express.Multer.File[], lineUserId?: string) {
+  // สร้างรายการแจ้งซ่อมใหม่ พร้อมอัปโหลดไฟล์และแจ้งเตือน | Create new repair ticket with files and notifications
+  async create(userId: number, dto: CreateRepairTicketDto, files?: Express.Multer.File[], lineUserId?: string) {
     // Debug logging
     this.logger.log(`Creating ticket - lineUserId parameter: ${lineUserId || 'NOT PROVIDED'}`);
     this.logger.log(`Creating ticket - dto.reporterLineId: ${dto.reporterLineId || 'NOT PROVIDED'}`);
@@ -114,7 +118,7 @@ export class RepairsService {
     // Only needed if lineUserId is not provided
     const linkingCode = lineUserId ? undefined : `${ticketCode}-${this.generateRandomCode(4)}`;
     
-    const attachmentData: any[] = [];
+    const attachmentData: Prisma.RepairAttachmentCreateWithoutRepairTicketInput[] = [];
 
     // Upload files to Cloudinary with security validations
     if (files && files.length > 0) {
@@ -166,7 +170,6 @@ export class RepairsService {
         reporterDepartment: dto.reporterDepartment || null,
         reporterPhone: dto.reporterPhone || null,
         reporterLineId: dto.reporterLineId || null,
-        problemCategory: dto.problemCategory,
         problemTitle: dto.problemTitle,
         problemDescription: dto.problemDescription || null,
         location: dto.location,
@@ -233,6 +236,7 @@ export class RepairsService {
     profilePicture: true,
   } as const;
 
+  // ดึงข้อมูลแจ้งซ่อมตาม ID (Safe select สำหรับ User) | Find repair ticket by ID
   async findOne(id: number) {
     const ticket = await this.prisma.repairTicket.findUnique({
       where: { id },
@@ -254,6 +258,7 @@ export class RepairsService {
     return ticket;
   }
 
+  // ค้นหาใบแจ้งซ่อมจาก Ticket Code | Find repair ticket by code
   async findByCode(ticketCode: string) {
     const ticket = await this.prisma.repairTicket.findUnique({
       where: { ticketCode },
@@ -275,7 +280,8 @@ export class RepairsService {
     return ticket;
   }
 
-  async update(id: number, dto: any, updatedById: number, files?: Express.Multer.File[]) {
+  // อัปเดตข้อมูลใบแจ้งซ่อม, จัดการผู้รับผิดชอบ และแจ้งเตือน LINE | Update ticket, assignees, and send notifications
+  async update(id: number, dto: UpdateRepairTicketDto, updatedById: number, files?: Express.Multer.File[]) {
     // Get original ticket with attachments to compare for notifications (single query)
     const originalTicket = await this.prisma.repairTicket.findUnique({
       where: { id },
@@ -284,6 +290,13 @@ export class RepairsService {
         attachments: { orderBy: { id: 'asc' }, take: 1 }, // PERF: Fetch attachment once for all notifications
       },
     });
+
+    // Fetch staff name who updated the ticket
+    const updatedBy = updatedById ? await this.prisma.user.findUnique({
+      where: { id: updatedById },
+      select: { name: true }
+    }) : null;
+    const staffName = updatedBy?.name;
 
     // Validate status transition
     if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status) {
@@ -295,7 +308,7 @@ export class RepairsService {
     }
 
     // Build update data with only valid fields
-    const updateData: any = {};
+    const updateData: Prisma.RepairTicketUpdateInput = {};
 
     if (dto.status !== undefined) updateData.status = dto.status;
     if (dto.notes !== undefined) updateData.notes = dto.notes;
@@ -336,10 +349,10 @@ export class RepairsService {
           });
 
           //LOG ASSIGNMENT HISTORY
-          const addedIds = dto.assigneeIds.filter((id: number) => !previousAssigneeIds.includes(id));
-          const removedIds = previousAssigneeIds.filter((id: number) => !dto.assigneeIds.includes(id));
+          const addedIds = (dto.assigneeIds || []).filter((id: number) => !previousAssigneeIds.includes(id));
+          const removedIds = previousAssigneeIds.filter((id: number) => !(dto.assigneeIds || []).includes(id));
 
-          const historyData: any[] = [];
+          const historyData: Prisma.RepairAssignmentHistoryCreateManyInput[] = [];
            // Log Assignments
           for (const uid of addedIds) {
               historyData.push({
@@ -449,7 +462,7 @@ export class RepairsService {
 
       // Log Operational Notes and Messages
       if (dto.notes || dto.messageToReporter) {
-          const logs: any[] = [];
+          const logs: Prisma.RepairAssignmentHistoryCreateManyInput[] = [];
           
           if (dto.notes) {
               logs.push({
@@ -486,6 +499,12 @@ export class RepairsService {
       // LINE Notifications
       // PERF: Reuse the pre-fetched attachment image URL for all notifications
       const cachedImageUrl = originalTicket?.attachments?.[0]?.fileUrl;
+
+      // Only treat messageToReporter as "new" if it actually changed from the stored value
+      // This prevents re-notifying the reporter when only internal notes (บันทึกภายใน) are saved
+      const isNewMessageToReporter = !!(dto.messageToReporter &&
+        dto.messageToReporter.trim() !== '' &&
+        dto.messageToReporter !== originalTicket?.messageToReporter);
 
       try {
         // Notify new assignees (PERF: parallelized)
@@ -605,9 +624,16 @@ export class RepairsService {
         }
 
         // Notify reporter on status change
-        if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status) {
+        // Skip notification when only internal notes (บันทึกภายใน) triggered the save
+        // Always notify for terminal statuses (COMPLETED, CANCELLED) and new assignee actions
+        const isTerminalStatus = dto.status === 'COMPLETED' || dto.status === 'CANCELLED';
+        const hasNewAssignees = dto.assigneeIds !== undefined && 
+          dto.assigneeIds.some((id: number) => !previousAssigneeIds.includes(id));
+        const shouldNotifyReporter = isTerminalStatus || isNewMessageToReporter || hasNewAssignees;
+
+        if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status && shouldNotifyReporter) {
           const technicianNames = ticket.assignees.map(a => a.user.name);
-          let remarkMessage = dto.messageToReporter || undefined;
+          let remarkMessage = isNewMessageToReporter ? dto.messageToReporter : undefined;
           
           if (dto.status === 'COMPLETED' && dto.completionReport) {
             remarkMessage = `รายงานการซ่อม: ${dto.completionReport}`;
@@ -626,6 +652,7 @@ export class RepairsService {
                 imageUrl: cachedImageUrl,
                 createdAt: ticket.createdAt,
                 remark: remarkMessage,
+                staffName,
               }
             );
             this.logger.log(`Notified reporter directly for: ${ticket.ticketCode}`);
@@ -635,6 +662,7 @@ export class RepairsService {
               problemTitle: ticket.problemTitle,
               status: dto.status,
               remark: remarkMessage,
+              staffName,
               technicianNames,
               updatedAt: new Date(),
             });
@@ -643,7 +671,8 @@ export class RepairsService {
         }
 
         // Notify reporter when messageToReporter is sent (without status change)
-        if (dto.messageToReporter && !(dto.status !== undefined && originalTicket && dto.status !== originalTicket.status)) {
+        // Only notify if the message has actually changed (prevents re-notifying on internal-note-only saves)
+        if (isNewMessageToReporter && !(dto.status !== undefined && originalTicket && dto.status !== originalTicket.status)) {
           if (originalTicket?.reporterLineUserId) {
             await this.lineNotificationService.notifyReporterDirectly(
               originalTicket.reporterLineUserId,
@@ -656,6 +685,7 @@ export class RepairsService {
                 imageUrl: cachedImageUrl,
                 createdAt: ticket.createdAt,
                 remark: dto.messageToReporter,
+                staffName,
               }
             );
           } else {
@@ -665,6 +695,7 @@ export class RepairsService {
               problemTitle: ticket.problemTitle,
               status: ticket.status,
               remark: dto.messageToReporter,
+              staffName,
               technicianNames,
               updatedAt: new Date(),
             });
@@ -690,6 +721,7 @@ export class RepairsService {
     }
   }
 
+  // ลบใบแจ้งซ่อมออกจากระบบ (Hard Delete) | Remove repair ticket from system
   async remove(id: number) {
     // Get ticket data first to check existence
     const ticket = await this.prisma.repairTicket.findUnique({
@@ -719,6 +751,63 @@ export class RepairsService {
     return { message: 'Deleted successfully', ticketCode: ticket.ticketCode };
   }
 
+  // ลบใบแจ้งซ่อมตามช่วงเวลา (Bulk Delete) | Remove repair tickets by date range
+  async removeByDateRange(startDate: Date, endDate: Date) {
+    // Find tickets in range to log or perform additional cleanup if needed
+    const count = await this.prisma.repairTicket.count({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    if (count === 0) {
+      return { message: 'No records found in this range', count: 0 };
+    }
+
+    // Related records will be deleted via Cascade as defined in schema.prisma
+    const result = await this.prisma.repairTicket.deleteMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    this.logger.log(`Bulk deleted ${result.count} repair tickets from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+    return { 
+      message: 'Bulk deletion successful', 
+      count: result.count,
+      period: { startDate, endDate }
+    };
+  }
+
+  // ลบใบแจ้งซ่อมแบบกลุ่มตามรายการ ID | Remove multiple repair tickets by their IDs
+  async removeMany(ids: number[]) {
+    if (!ids || ids.length === 0) {
+      return { message: 'No IDs provided', count: 0 };
+    }
+
+    const result = await this.prisma.repairTicket.deleteMany({
+      where: {
+        id: { in: ids },
+      },
+    });
+
+    this.logger.log(`Bulk deleted ${result.count} repair tickets by IDs`);
+
+    return {
+      message: 'Bulk deletion successful',
+      count: result.count,
+      ids,
+    };
+  }
+
+  // ดึงข้อมูลสถิติภาพรวมแยกตามสถานะ | Get summary statistics by status
   async getStatistics() {
     const stats = await this.prisma.repairTicket.groupBy({
       by: ['status'],
@@ -743,6 +832,7 @@ export class RepairsService {
     };
   }
 
+  // ดึงข้อมูลสถิติสำหรับการแสดงผลบน Dashboard | Get dashboard visualization statistics
   async getDashboardStatistics(filter: 'day' | 'week' | 'month' = 'day', date?: Date, limit?: number) {
     const targetDate = date || new Date();
     
@@ -756,8 +846,11 @@ export class RepairsService {
       endDate = new Date(targetDate);
       endDate.setHours(23, 59, 59, 999);
     } else if (filter === 'week') {
-      // User wanting custom start date for week (start on selected date)
+      // Calendar week: Monday → Sunday
+      const day = targetDate.getDay(); // 0=Sun, 1=Mon...
+      const diffToMonday = day === 0 ? -6 : 1 - day;
       startDate = new Date(targetDate);
+      startDate.setDate(targetDate.getDate() + diffToMonday);
       startDate.setHours(0, 0, 0, 0);
       endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
@@ -815,6 +908,7 @@ export class RepairsService {
     return {
       all: {
         total: allTotal,
+        pending: getCount(allStats, RepairTicketStatus.PENDING),
         inProgress: getCount(allStats, RepairTicketStatus.IN_PROGRESS),
         completed: getCount(allStats, RepairTicketStatus.COMPLETED),
         cancelled: getCount(allStats, RepairTicketStatus.CANCELLED),
@@ -844,9 +938,11 @@ export class RepairsService {
         endDate = new Date(date);
         endDate.setHours(23, 59, 59, 999);
       } else if (filter === 'week') {
-        const dayOfWeek = date.getDay();
+        // Calendar week: Monday → Sunday
+        const day = date.getDay(); // 0=Sun, 1=Mon...
+        const diffToMonday = day === 0 ? -6 : 1 - day;
         startDate = new Date(date);
-        startDate.setDate(date.getDate() - dayOfWeek);
+        startDate.setDate(date.getDate() + diffToMonday);
         startDate.setHours(0, 0, 0, 0);
         endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 6);
@@ -931,6 +1027,8 @@ export class RepairsService {
     urgency?: UrgencyLevel;
     assignedTo?: number;
     limit?: number;
+    startDate?: Date;
+    endDate?: Date;
   }) {
     const {
       userId,
@@ -951,6 +1049,12 @@ export class RepairsService {
     if (status) where.status = status;
     if (urgency) where.urgency = urgency;
     if (assignedTo) where.assignedTo = assignedTo;
+
+    if (params.startDate || params.endDate) {
+      where.createdAt = {};
+      if (params.startDate) where.createdAt.gte = params.startDate;
+      if (params.endDate) where.createdAt.lte = params.endDate;
+    }
 
     return this.prisma.repairTicket.findMany({
       where,

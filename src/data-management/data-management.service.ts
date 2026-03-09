@@ -1,3 +1,4 @@
+// ===== จัดการข้อมูลระบบ | Data Management Service =====
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -5,7 +6,7 @@ import { DataTypeInfo } from './dto/clear-data.dto';
 import * as ExcelJS from 'exceljs';
 import AdmZip = require('adm-zip');
 
-export type DataType = 'repairs' | 'tickets' | 'loans' | 'notifications' | 'stock' | 'departments';
+export type DataType = 'repairs' | 'loans' | 'notifications' | 'stock' | 'departments';
 
 @Injectable()
 export class DataManagementService {
@@ -20,41 +21,31 @@ export class DataManagementService {
     repairs: {
       key: 'repairs',
       label: 'การแจ้งซ่อม',
-      icon: 'Wrench',
-      description: 'ข้อมูลการแจ้งซ่อมทั้งหมด รวมถึง logs และ attachments',
-    },
-    tickets: {
-      key: 'tickets',
-      label: 'Tickets',
-      icon: 'Ticket',
-      description: 'ระบบ Ticket เดิม รวมถึง logs และ attachments',
+      
     },
     loans: {
       key: 'loans',
       label: 'การยืม',
-      icon: 'Clock',
-      description: 'ข้อมูลการยืมอุปกรณ์ทั้งหมด',
+     
     },
     notifications: {
       key: 'notifications',
       label: 'การแจ้งเตือน',
-      icon: 'Bell',
-      description: 'การแจ้งเตือนทั้งหมด รวมถึง LINE notifications',
+      
     },
     stock: {
       key: 'stock',
       label: 'สต็อก',
-      icon: 'Package',
-      description: 'ข้อมูลสินค้าคงคลังทั้งหมด',
+      
     },
     departments: {
       key: 'departments',
       label: 'แผนก',
-      icon: 'Users',
-      description: 'ข้อมูลแผนกทั้งหมด',
+      
     },
   };
 
+  // ดึงข้อมูลประเภทข้อมูลที่สามารถจัดการได้พร้อมจำนวน Record | Get data types with counts for management
   async getDataTypes(): Promise<DataTypeInfo[]> {
     const counts = await this.getDataCounts();
     
@@ -65,9 +56,8 @@ export class DataManagementService {
   }
 
   private async getDataCounts(): Promise<Record<DataType, number>> {
-    const [repairs, tickets, loans, notifications, lineNotifications, stock, departments] = await Promise.all([
+    const [repairs, loans, notifications, lineNotifications, stock, departments] = await Promise.all([
       this.prisma.repairTicket.count(),
-      this.prisma.ticket.count(),
       this.prisma.loan.count(),
       this.prisma.notification.count(),
       this.prisma.lineNotification.count(),
@@ -77,7 +67,6 @@ export class DataManagementService {
 
     return {
       repairs,
-      tickets,
       loans,
       notifications: notifications + lineNotifications,
       stock,
@@ -85,12 +74,13 @@ export class DataManagementService {
     };
   }
 
+  // ส่งออกข้อมูลเป็นไฟล์ Excel หรือ Zip (กรณีหลายประเภท) | Export data to Excel or Zip file
   async exportToExcel(types: DataType[]): Promise<{ buffer: Buffer; fileName: string; mimeType: string }> {
     // If only one type is selected, export directly as .xlsx
     if (types.length === 1) {
       const type = types[0];
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'TRR System';
+      workbook.creator = 'TRR';
       workbook.created = new Date();
       
       await this.addSheetForType(workbook, type);
@@ -110,7 +100,7 @@ export class DataManagementService {
     
     for (const type of types) {
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'TRR System';
+      workbook.creator = 'TRR';
       workbook.created = new Date();
       
       await this.addSheetForType(workbook, type);
@@ -134,9 +124,6 @@ export class DataManagementService {
     switch (type) {
       case 'repairs':
         await this.addRepairsSheet(workbook);
-        break;
-      case 'tickets':
-        await this.addTicketsSheet(workbook);
         break;
       case 'loans':
         await this.addLoansSheet(workbook);
@@ -165,7 +152,6 @@ export class DataManagementService {
     sheet.columns = [
       { header: 'รหัส', key: 'ticketCode', width: 15 },
       { header: 'ชื่อปัญหา', key: 'problemTitle', width: 30 },
-      { header: 'หมวดหมู่', key: 'problemCategory', width: 15 },
       { header: 'สถานที่', key: 'location', width: 20 },
       { header: 'ผู้แจ้ง', key: 'reporterName', width: 20 },
       { header: 'โทรศัพท์', key: 'reporterPhone', width: 15 },
@@ -181,7 +167,6 @@ export class DataManagementService {
       sheet.addRow({
         ticketCode: repair.ticketCode,
         problemTitle: repair.problemTitle,
-        problemCategory: repair.problemCategory,
         location: repair.location,
         reporterName: repair.reporterName,
         reporterPhone: repair.reporterPhone || '-',
@@ -193,45 +178,6 @@ export class DataManagementService {
     });
   }
 
-  private async addTicketsSheet(workbook: ExcelJS.Workbook) {
-    const sheet = workbook.addWorksheet('Tickets');
-    const tickets = await this.prisma.ticket.findMany({
-      include: {
-        user: { select: { name: true } },
-        assignee: { select: { name: true } },
-      },
-    });
-
-    sheet.columns = [
-      { header: 'รหัส', key: 'ticketCode', width: 15 },
-      { header: 'หัวข้อ', key: 'title', width: 30 },
-      { header: 'คำอธิบาย', key: 'description', width: 40 },
-      { header: 'หมวดหมู่', key: 'category', width: 15 },
-      { header: 'สถานที่', key: 'location', width: 20 },
-      { header: 'สถานะ', key: 'status', width: 12 },
-      { header: 'ความสำคัญ', key: 'priority', width: 12 },
-      { header: 'ผู้แจ้ง', key: 'user', width: 20 },
-      { header: 'ผู้รับผิดชอบ', key: 'assignee', width: 20 },
-      { header: 'วันที่สร้าง', key: 'createdAt', width: 20 },
-    ];
-
-    this.styleHeaderRow(sheet);
-
-    tickets.forEach(ticket => {
-      sheet.addRow({
-        ticketCode: ticket.ticketCode,
-        title: ticket.title,
-        description: ticket.description,
-        category: ticket.category,
-        location: ticket.location,
-        status: ticket.status,
-        priority: ticket.priority,
-        user: ticket.user?.name || ticket.guestName || '-',
-        assignee: ticket.assignee?.name || '-',
-        createdAt: ticket.createdAt.toISOString(),
-      });
-    });
-  }
 
   private async addLoansSheet(workbook: ExcelJS.Workbook) {
     const sheet = workbook.addWorksheet('การยืม');
@@ -310,7 +256,6 @@ export class DataManagementService {
       { header: 'ชื่อ', key: 'name', width: 30 },
       { header: 'จำนวน', key: 'quantity', width: 10 },
       { header: 'หมวดหมู่', key: 'category', width: 20 },
-      { header: 'สถานที่เก็บ', key: 'location', width: 20 },
       { header: 'วันที่สร้าง', key: 'createdAt', width: 20 },
     ];
 
@@ -322,7 +267,6 @@ export class DataManagementService {
         name: item.name,
         quantity: item.quantity,
         category: item.category || '-',
-        location: item.location || '-',
         createdAt: item.createdAt.toISOString(),
       });
     });
@@ -369,6 +313,7 @@ export class DataManagementService {
     headerRow.height = 25;
   }
 
+  // ล้างข้อมูลในระบบแยกตามประเภท (ลบทั้ง DB และ Cloudinary) | Clear system data by types (DB and Cloudinary)
   async clearData(types: DataType[]): Promise<{ success: boolean; deleted: Record<string, number> }> {
     const deleted: Record<string, number> = {};
     const publicIdsToDelete: string[] = [];
@@ -383,12 +328,6 @@ export class DataManagementService {
           const publicId = this.cloudinary.extractPublicIdFromUrl(att.fileUrl);
           if (publicId) publicIdsToDelete.push(publicId);
         }
-      } else if (type === 'tickets') {
-        const attachments = await this.prisma.attachment.findMany({ select: { fileUrl: true } });
-        for (const att of attachments) {
-          const publicId = this.cloudinary.extractPublicIdFromUrl(att.fileUrl);
-          if (publicId) publicIdsToDelete.push(publicId);
-        }
       }
     }
 
@@ -398,6 +337,7 @@ export class DataManagementService {
         switch (type) {
           case 'repairs':
             // Delete in order due to relations
+            const assignmentHistory = await tx.repairAssignmentHistory.deleteMany();
             const repairLogs = await tx.repairTicketLog.deleteMany();
             const repairAssignees = await tx.repairTicketAssignee.deleteMany();
             const repairAttachmentsDeleted = await tx.repairAttachment.deleteMany();
@@ -406,16 +346,9 @@ export class DataManagementService {
             deleted['repairLogs'] = repairLogs.count;
             deleted['repairAssignees'] = repairAssignees.count;
             deleted['repairAttachments'] = repairAttachmentsDeleted.count;
+            deleted['assignmentHistory'] = assignmentHistory.count;
             break;
 
-          case 'tickets':
-            const ticketLogs = await tx.ticketLog.deleteMany();
-            const attachmentsDeleted = await tx.attachment.deleteMany();
-            const tickets = await tx.ticket.deleteMany();
-            deleted['tickets'] = tickets.count;
-            deleted['ticketLogs'] = ticketLogs.count;
-            deleted['attachments'] = attachmentsDeleted.count;
-            break;
 
           case 'loans':
             const loans = await tx.loan.deleteMany();
@@ -430,7 +363,9 @@ export class DataManagementService {
             break;
 
           case 'stock':
+            const stockTransactions = await tx.stockTransaction.deleteMany();
             const stock = await tx.stockItem.deleteMany();
+            deleted['stockTransactions'] = stockTransactions.count;
             deleted['stock'] = stock.count;
             break;
 
