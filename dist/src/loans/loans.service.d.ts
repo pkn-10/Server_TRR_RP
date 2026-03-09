@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 export declare class LoansService {
     private prisma;
+    private readonly logger;
     constructor(prisma: PrismaService);
     create(data: {
         itemName?: string;
@@ -25,10 +26,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;
@@ -51,10 +52,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;
@@ -77,10 +78,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;
@@ -114,10 +115,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;
@@ -131,10 +132,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;
@@ -148,10 +149,10 @@ export declare class LoansService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
-        status: import(".prisma/client").$Enums.LoanStatus;
         userId: number;
+        status: import(".prisma/client").$Enums.LoanStatus;
         itemName: string | null;
+        description: string | null;
         quantity: number;
         borrowDate: Date;
         expectedReturnDate: Date | null;

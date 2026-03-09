@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Priority, TicketStatus, ProblemCategory, ProblemSubcategory } from '@prisma/client';
+import { PrismaClient, Role, RepairTicketStatus, UrgencyLevel } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -55,28 +55,29 @@ async function main() {
   });
 
   if (adminUser && itUser) {
-    const ticketExists = await prisma.ticket.findFirst({
+    const ticketExists = await prisma.repairTicket.findFirst({
       where: { userId: adminUser.id },
     });
 
     if (!ticketExists) {
-      await prisma.ticket.create({
+      await prisma.repairTicket.create({
         data: {
           ticketCode: `TKT-2025-${Date.now().toString().slice(-6)}`,
-          title: 'เครื่องพิมพ์ไม่ทำงาน',
-          description: 'เครื่องพิมพ์ HP LaserJet ในห้องธุรการไม่สามารถพิมพ์เอกสารได้',
-          equipmentName: 'HP LaserJet Pro M404n',
-          equipmentId: 'FS-CNT-6407001',
+          reporterName: adminUser.name,
+          problemTitle: 'เครื่องพิมพ์ไม่ทำงาน',
+          problemDescription: 'เครื่องพิมพ์ HP LaserJet ในห้องธุรการไม่สามารถพิมพ์เอกสารได้ (HP LaserJet Pro M404n, FS-CNT-6407001)',
           location: 'ห้องธุรการ ชั้น 3',
-          category: 'REPAIR',
-          problemCategory: ProblemCategory.PERIPHERAL,
-          problemSubcategory: ProblemSubcategory.OTHER,
-          priority: Priority.HIGH,
-          status: TicketStatus.OPEN,
+          urgency: UrgencyLevel.URGENT,
+          status: RepairTicketStatus.PENDING,
           notes: 'ตรวจเชคหมึก ปลั๊ก และการเชื่อมต่อ',
-          requiredDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           userId: adminUser.id,
-          assignedTo: itUser.id,
+          assignees: {
+            create: [
+              {
+                userId: itUser.id,
+              },
+            ],
+          },
         },
       });
 

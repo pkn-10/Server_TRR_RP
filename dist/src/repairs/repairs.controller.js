@@ -77,9 +77,6 @@ let RepairsController = RepairsController_1 = class RepairsController {
                 this.logger.warn(`Invalid phone format rejected: ${dto.reporterPhone}`);
                 dto.reporterPhone = '';
             }
-            dto.problemCategory = Object.values(client_1.ProblemCategory).includes(body.problemCategory)
-                ? body.problemCategory
-                : client_1.ProblemCategory.OTHER;
             dto.urgency = Object.values(client_1.UrgencyLevel).includes(body.urgency)
                 ? body.urgency
                 : client_1.UrgencyLevel.NORMAL;
@@ -131,7 +128,7 @@ let RepairsController = RepairsController_1 = class RepairsController {
             throw new common_1.HttpException('Ticket not found', common_1.HttpStatus.NOT_FOUND);
         }
     }
-    async findAll(req, status, urgency, assignedTo, limit) {
+    async findAll(req, status, urgency, assignedTo, limit, startDate, endDate) {
         const user = req.user;
         return this.repairsService.findAll({
             userId: user.id,
@@ -140,6 +137,8 @@ let RepairsController = RepairsController_1 = class RepairsController {
             urgency,
             assignedTo: assignedTo ? Number(assignedTo) : undefined,
             limit: limit ? Number(limit) : undefined,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
         });
     }
     async create(req, dto, files) {
@@ -184,6 +183,26 @@ let RepairsController = RepairsController_1 = class RepairsController {
             throw new common_1.ForbiddenException('Permission denied: Only ADMIN or IT can delete repair tickets');
         }
         return this.repairsService.remove(id);
+    }
+    async bulkDeleteByDate(startDate, endDate, req) {
+        if (!startDate || !endDate) {
+            throw new common_1.BadRequestException('Both startDate and endDate are required for bulk deletion');
+        }
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new common_1.BadRequestException('Invalid date format');
+        }
+        return this.repairsService.removeByDateRange(start, end);
+    }
+    async bulkDeleteByIDs(ids, req) {
+        if (req.user.role !== client_1.Role.ADMIN && req.user.role !== client_1.Role.IT) {
+            throw new common_1.ForbiddenException('Permission denied: Only ADMIN or IT can delete repair tickets');
+        }
+        if (!Array.isArray(ids) || ids.length === 0) {
+            throw new common_1.BadRequestException('An array of IDs is required for bulk deletion');
+        }
+        return this.repairsService.removeMany(ids.map(id => Number(id)));
     }
 };
 exports.RepairsController = RepairsController;
@@ -232,8 +251,10 @@ __decorate([
     __param(2, (0, common_1.Query)('urgency')),
     __param(3, (0, common_1.Query)('assignedTo')),
     __param(4, (0, common_1.Query)('limit')),
+    __param(5, (0, common_1.Query)('startDate')),
+    __param(6, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], RepairsController.prototype, "findAll", null);
 __decorate([
@@ -325,6 +346,26 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], RepairsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Delete)('bulk-delete/by-date'),
+    (0, common_1.UseGuards)(jwt_guard_1.JwtAuthGuard),
+    (0, common_1.SetMetadata)('roles', [client_1.Role.ADMIN]),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], RepairsController.prototype, "bulkDeleteByDate", null);
+__decorate([
+    (0, common_1.Delete)('bulk-delete/by-ids'),
+    (0, common_1.UseGuards)(jwt_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)('ids')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Array, Object]),
+    __metadata("design:returntype", Promise)
+], RepairsController.prototype, "bulkDeleteByIDs", null);
 exports.RepairsController = RepairsController = RepairsController_1 = __decorate([
     (0, common_1.Controller)('api/repairs'),
     __metadata("design:paramtypes", [repairs_service_1.RepairsService,

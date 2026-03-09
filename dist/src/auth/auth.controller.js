@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AuthController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
@@ -20,8 +21,9 @@ const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const public_decorator_1 = require("./public.decorator");
-let AuthController = class AuthController {
+let AuthController = AuthController_1 = class AuthController {
     authService;
+    logger = new common_1.Logger(AuthController_1.name);
     constructor(authService) {
         this.authService = authService;
     }
@@ -36,7 +38,7 @@ let AuthController = class AuthController {
             return this.authService.getLineAuthUrl();
         }
         catch (error) {
-            console.error('Error getting LINE Auth URL:', error);
+            this.logger.error(`Error getting LINE Auth URL: ${error.message}`);
             throw new common_1.BadRequestException(error.message || 'Failed to generate LINE Auth URL');
         }
     }
@@ -44,7 +46,6 @@ let AuthController = class AuthController {
         return this.authService.lineCallback(dto.code, dto.state);
     }
     getProfile(req) {
-        console.log('Getting profile for user:', req.user);
         if (!req.user || !req.user.id) {
             throw new common_1.BadRequestException('User information not found in request');
         }
@@ -129,7 +130,7 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyLineCode", null);
-exports.AuthController = AuthController = __decorate([
+exports.AuthController = AuthController = AuthController_1 = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

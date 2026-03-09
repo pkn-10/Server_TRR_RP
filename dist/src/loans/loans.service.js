@@ -8,12 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var LoansService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoansService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
-let LoansService = class LoansService {
+let LoansService = LoansService_1 = class LoansService {
     prisma;
+    logger = new common_1.Logger(LoansService_1.name);
     constructor(prisma) {
         this.prisma = prisma;
     }
@@ -62,8 +64,6 @@ let LoansService = class LoansService {
         });
     }
     async update(id, data) {
-        console.log(`[LoansService.update] Starting update for loan ${id}`);
-        console.log(`[LoansService.update] Input data:`, data);
         const updateData = {};
         if (data.status !== undefined)
             updateData.status = data.status;
@@ -85,7 +85,6 @@ let LoansService = class LoansService {
             updateData.borrowerPhone = data.borrowerPhone;
         if (data.borrowerLineId !== undefined)
             updateData.borrowerLineId = data.borrowerLineId;
-        console.log(`[LoansService.update] Prepared updateData:`, JSON.stringify(updateData, null, 2));
         try {
             const result = await this.prisma.loan.update({
                 where: { id },
@@ -96,49 +95,48 @@ let LoansService = class LoansService {
                     },
                 },
             });
-            console.log(`[LoansService.update] Loan ${id} updated successfully:`, JSON.stringify(result, null, 2));
             return result;
         }
         catch (error) {
-            console.error(`[LoansService.update] Error updating loan ${id}:`, error);
+            this.logger.error(`Error updating loan ${id}`, error instanceof Error ? error.stack : undefined);
             throw error;
         }
     }
     async checkOverdue() {
         const now = new Date();
-        const overdueLoans = await this.prisma.loan.findMany({
+        await this.prisma.loan.updateMany({
             where: {
                 status: 'BORROWED',
                 expectedReturnDate: {
                     lt: now,
                 },
             },
+            data: { status: 'OVERDUE' },
         });
-        for (const loan of overdueLoans) {
-            await this.prisma.loan.update({
-                where: { id: loan.id },
-                data: { status: 'OVERDUE' },
-            });
-        }
-        return overdueLoans;
+        return await this.prisma.loan.findMany({
+            where: {
+                status: 'OVERDUE',
+                expectedReturnDate: {
+                    lt: now,
+                },
+            },
+        });
     }
     async delete(id) {
-        console.log(`[LoansService.delete] Deleting loan ${id}`);
         try {
             const result = await this.prisma.loan.delete({
                 where: { id },
             });
-            console.log(`[LoansService.delete] Loan ${id} deleted successfully`);
             return result;
         }
         catch (error) {
-            console.error(`[LoansService.delete] Error deleting loan ${id}:`, error);
+            this.logger.error(`Error deleting loan ${id}`, error instanceof Error ? error.stack : undefined);
             throw error;
         }
     }
 };
 exports.LoansService = LoansService;
-exports.LoansService = LoansService = __decorate([
+exports.LoansService = LoansService = LoansService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], LoansService);

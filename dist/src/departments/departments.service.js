@@ -22,7 +22,7 @@ let DepartmentsService = class DepartmentsService {
             where: { code: createDepartmentDto.code },
         });
         if (existingCode) {
-            throw new common_1.ConflictException('Department code already exists');
+            throw new common_1.ConflictException('รหัสแผนกซ้ำ');
         }
         return this.prisma.department.create({
             data: createDepartmentDto,

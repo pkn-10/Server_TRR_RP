@@ -11,7 +11,6 @@ const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
 const auth_module_1 = require("./auth/auth.module");
-const tickets_module_1 = require("./tickets/tickets.module");
 const notification_module_1 = require("./notification/notification.module");
 const users_module_1 = require("./users/users.module");
 const loans_module_1 = require("./loans/loans.module");
@@ -33,7 +32,6 @@ exports.AppModule = AppModule = __decorate([
                     limit: 20,
                 }]),
             auth_module_1.AuthModule,
-            tickets_module_1.TicketsModule,
             notification_module_1.NotificationModule,
             users_module_1.UsersModule,
             loans_module_1.LoansModule,

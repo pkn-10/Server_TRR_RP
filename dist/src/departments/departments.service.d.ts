@@ -9,9 +9,9 @@ export declare class DepartmentsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        code: string;
         description: string | null;
         location: string | null;
-        code: string;
         contactEmail: string | null;
         contactPhone: string | null;
         headName: string | null;
@@ -21,9 +21,9 @@ export declare class DepartmentsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        code: string;
         description: string | null;
         location: string | null;
-        code: string;
         contactEmail: string | null;
         contactPhone: string | null;
         headName: string | null;
@@ -33,9 +33,9 @@ export declare class DepartmentsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        code: string;
         description: string | null;
         location: string | null;
-        code: string;
         contactEmail: string | null;
         contactPhone: string | null;
         headName: string | null;
@@ -45,9 +45,9 @@ export declare class DepartmentsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        code: string;
         description: string | null;
         location: string | null;
-        code: string;
         contactEmail: string | null;
         contactPhone: string | null;
         headName: string | null;
@@ -57,9 +57,9 @@ export declare class DepartmentsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        code: string;
         description: string | null;
         location: string | null;
-        code: string;
         contactEmail: string | null;
         contactPhone: string | null;
         headName: string | null;

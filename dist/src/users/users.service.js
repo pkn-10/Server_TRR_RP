@@ -81,8 +81,8 @@ let UsersService = class UsersService {
                     updatedAt: true,
                     _count: {
                         select: {
-                            tickets: true,
-                            assigned: true,
+                            repairTickets: true,
+                            repairAssignments: true,
                         },
                     },
                 },
@@ -94,12 +94,7 @@ let UsersService = class UsersService {
             }),
             this.prisma.user.count({ where }),
         ]);
-        const mappedUsers = users.map(user => ({
-            ...user,
-            lineUserId: user.lineOALink?.lineUserId || user.lineId,
-            displayName: user.lineOALink?.displayName,
-            pictureUrl: user.lineOALink?.pictureUrl,
-        }));
+        const mappedUsers = users.map(user => this.mapUserLineInfo(user));
         return {
             data: mappedUsers,
             pagination: {
@@ -137,12 +132,7 @@ let UsersService = class UsersService {
             orderBy: {
                 name: 'asc'
             }
-        }).then(users => users.map(user => ({
-            ...user,
-            lineUserId: user.lineOALink?.lineUserId || user.lineId,
-            displayName: user.lineOALink?.displayName,
-            pictureUrl: user.lineOALink?.pictureUrl
-        })));
+        }).then(users => users.map(user => this.mapUserLineInfo(user)));
     }
     async getUserById(id) {
         const user = await this.prisma.user.findUnique({
@@ -167,8 +157,8 @@ let UsersService = class UsersService {
                 updatedAt: true,
                 _count: {
                     select: {
-                        tickets: true,
-                        assigned: true,
+                        repairTickets: true,
+                        repairAssignments: true,
                     },
                 },
             },
@@ -176,12 +166,7 @@ let UsersService = class UsersService {
         if (!user) {
             throw new common_1.NotFoundException(`User with ID ${id} not found`);
         }
-        return {
-            ...user,
-            lineUserId: user.lineOALink?.lineUserId || user.lineId,
-            displayName: user.lineOALink?.displayName,
-            pictureUrl: user.lineOALink?.pictureUrl,
-        };
+        return this.mapUserLineInfo(user);
     }
     async updateUser(id, data) {
         const userExists = await this.prisma.user.findUnique({
@@ -229,12 +214,7 @@ let UsersService = class UsersService {
                 createdAt: true,
                 updatedAt: true,
             },
-        }).then(user => ({
-            ...user,
-            lineUserId: user.lineOALink?.lineUserId || user.lineId,
-            displayName: user.lineOALink?.displayName,
-            pictureUrl: user.lineOALink?.pictureUrl,
-        }));
+        }).then(user => this.mapUserLineInfo(user));
     }
     async deleteUser(id) {
         const userExists = await this.prisma.user.findUnique({
@@ -290,12 +270,7 @@ let UsersService = class UsersService {
                 updatedAt: true,
             },
             take: 10,
-        }).then(users => users.map(user => ({
-            ...user,
-            lineUserId: user.lineOALink?.lineUserId || user.lineId,
-            displayName: user.lineOALink?.displayName,
-            pictureUrl: user.lineOALink?.pictureUrl
-        })));
+        }).then(users => users.map(user => this.mapUserLineInfo(user)));
     }
     async createUser(data) {
         const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -427,6 +402,16 @@ let UsersService = class UsersService {
             });
         }
         return guest;
+    }
+    mapUserLineInfo(user) {
+        if (!user)
+            return null;
+        return {
+            ...user,
+            lineUserId: user.lineOALink?.lineUserId || user.lineId,
+            displayName: user.lineOALink?.displayName,
+            pictureUrl: user.lineOALink?.pictureUrl,
+        };
     }
 };
 exports.UsersService = UsersService;

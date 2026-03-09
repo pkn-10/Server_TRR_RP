@@ -1,7 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { DataTypeInfo } from './dto/clear-data.dto';
-export type DataType = 'repairs' | 'tickets' | 'loans' | 'notifications' | 'stock' | 'departments';
+export type DataType = 'repairs' | 'loans' | 'notifications' | 'stock' | 'departments';
 export declare class DataManagementService {
     private prisma;
     private cloudinary;
@@ -17,7 +17,6 @@ export declare class DataManagementService {
     }>;
     private addSheetForType;
     private addRepairsSheet;
-    private addTicketsSheet;
     private addLoansSheet;
     private addNotificationsSheet;
     private addStockSheet;

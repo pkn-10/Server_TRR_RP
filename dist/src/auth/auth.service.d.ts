@@ -34,25 +34,19 @@ export declare class AuthService {
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;
     updateProfile(userId: number, data: {
         name?: string;
-        department?: string;
         phoneNumber?: string;
-        lineId?: string;
     }): Promise<{
         id: number;
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;
@@ -61,9 +55,7 @@ export declare class AuthService {
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;

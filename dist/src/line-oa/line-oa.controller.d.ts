@@ -62,10 +62,10 @@ export declare class LineOAController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            status: import(".prisma/client").$Enums.LineNotificationStatus;
             lineUserId: string;
+            status: import(".prisma/client").$Enums.LineNotificationStatus;
             type: string;
+            title: string;
             message: string;
             retryCount: number;
             errorMessage: string | null;

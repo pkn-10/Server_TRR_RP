@@ -3,6 +3,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 export declare class AuthController {
     private authService;
+    private readonly logger;
     constructor(authService: AuthService);
     register(dto: RegisterDto): Promise<{
         message: string;
@@ -30,9 +31,7 @@ export declare class AuthController {
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;
@@ -46,9 +45,7 @@ export declare class AuthController {
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;
@@ -57,9 +54,7 @@ export declare class AuthController {
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
-        department: string | null;
         phoneNumber: string | null;
-        lineId: string | null;
         profilePicture: string | null;
         createdAt: Date;
     }>;

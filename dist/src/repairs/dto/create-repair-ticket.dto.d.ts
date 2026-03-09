@@ -1,11 +1,10 @@
-import { ProblemCategory, UrgencyLevel } from '@prisma/client';
+import { UrgencyLevel } from '@prisma/client';
 export declare class CreateRepairTicketDto {
     reporterName: string;
     reporterDepartment?: string;
     reporterPhone?: string;
     reporterLineId?: string;
     accessToken?: string;
-    problemCategory: ProblemCategory;
     problemTitle: string;
     problemDescription?: string;
     location: string;

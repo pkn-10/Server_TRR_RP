@@ -14,19 +14,18 @@ export declare class RepairsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -46,33 +45,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -88,8 +68,27 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
         assignmentHistory: ({
             assignee: {
@@ -115,29 +114,28 @@ export declare class RepairsController {
         } & {
             id: number;
             createdAt: Date;
-            action: string;
             repairTicketId: number;
+            action: string;
             note: string | null;
-            assignerId: number | null;
             assigneeId: number | null;
+            assignerId: number | null;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -157,33 +155,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -199,26 +178,44 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -238,33 +235,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -280,8 +258,27 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
         assignmentHistory: ({
             assignee: {
@@ -307,29 +304,28 @@ export declare class RepairsController {
         } & {
             id: number;
             createdAt: Date;
-            action: string;
             repairTicketId: number;
+            action: string;
             note: string | null;
-            assignerId: number | null;
             assigneeId: number | null;
+            assignerId: number | null;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -338,7 +334,7 @@ export declare class RepairsController {
         completedAt: Date | null;
         cancelledAt: Date | null;
     }>;
-    findAll(req: any, status?: RepairTicketStatus, urgency?: UrgencyLevel, assignedTo?: string, limit?: string): Promise<({
+    findAll(req: any, status?: RepairTicketStatus, urgency?: UrgencyLevel, assignedTo?: string, limit?: string, startDate?: string, endDate?: string): Promise<({
         user: {
             id: number;
             name: string;
@@ -363,26 +359,25 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -395,19 +390,18 @@ export declare class RepairsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -419,12 +413,12 @@ export declare class RepairsController {
     getSchedule(): Promise<{
         id: number;
         createdAt: Date;
-        ticketCode: string;
-        location: string;
         status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
         scheduledAt: Date;
         completedAt: Date | null;
@@ -441,6 +435,7 @@ export declare class RepairsController {
     getDashboardStatistics(filter?: 'day' | 'week' | 'month', dateStr?: string, limitStr?: string): Promise<{
         all: {
             total: number;
+            pending: any;
             inProgress: any;
             completed: any;
             cancelled: any;
@@ -455,10 +450,10 @@ export declare class RepairsController {
         recentRepairs: {
             id: number;
             createdAt: Date;
-            ticketCode: string;
-            location: string;
             status: import(".prisma/client").$Enums.RepairTicketStatus;
+            ticketCode: string;
             problemTitle: string;
+            location: string;
             urgency: import(".prisma/client").$Enums.UrgencyLevel;
         }[];
         dateRange: {
@@ -485,33 +480,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -527,26 +503,44 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -566,33 +560,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -608,8 +583,27 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
         assignmentHistory: ({
             assignee: {
@@ -635,29 +629,28 @@ export declare class RepairsController {
         } & {
             id: number;
             createdAt: Date;
-            action: string;
             repairTicketId: number;
+            action: string;
             note: string | null;
-            assignerId: number | null;
             assigneeId: number | null;
+            assignerId: number | null;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -677,33 +670,14 @@ export declare class RepairsController {
             lineId: string | null;
             profilePicture: string | null;
         };
-        logs: ({
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                role: import(".prisma/client").$Enums.Role;
-                department: string | null;
-                phoneNumber: string | null;
-                lineId: string | null;
-                profilePicture: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.RepairTicketStatus;
-            comment: string | null;
-            updatedBy: number;
-            repairTicketId: number;
-        })[];
         attachments: {
             id: number;
             createdAt: Date;
+            repairTicketId: number;
             filename: string;
             fileUrl: string;
             fileSize: number;
             mimeType: string;
-            repairTicketId: number;
         }[];
         assignees: ({
             user: {
@@ -719,8 +693,27 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
+        })[];
+        logs: ({
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                department: string | null;
+                phoneNumber: string | null;
+                lineId: string | null;
+                profilePicture: string | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            status: import(".prisma/client").$Enums.RepairTicketStatus;
+            repairTicketId: number;
+            comment: string | null;
+            updatedBy: number;
         })[];
         assignmentHistory: ({
             assignee: {
@@ -746,29 +739,28 @@ export declare class RepairsController {
         } & {
             id: number;
             createdAt: Date;
-            action: string;
             repairTicketId: number;
+            action: string;
             note: string | null;
-            assignerId: number | null;
             assigneeId: number | null;
+            assignerId: number | null;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -810,26 +802,25 @@ export declare class RepairsController {
         } & {
             id: number;
             userId: number;
-            repairTicketId: number;
             assignedAt: Date;
+            repairTicketId: number;
         })[];
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        ticketCode: string;
-        problemCategory: import(".prisma/client").$Enums.ProblemCategory;
-        location: string;
-        status: import(".prisma/client").$Enums.RepairTicketStatus;
-        notes: string | null;
         userId: number;
+        status: import(".prisma/client").$Enums.RepairTicketStatus;
+        ticketCode: string;
         reporterName: string;
         reporterDepartment: string | null;
         reporterPhone: string | null;
         reporterLineId: string | null;
         problemTitle: string;
         problemDescription: string | null;
+        location: string;
         urgency: import(".prisma/client").$Enums.UrgencyLevel;
+        notes: string | null;
         messageToReporter: string | null;
         linkingCode: string | null;
         reporterLineUserId: string | null;
@@ -841,5 +832,26 @@ export declare class RepairsController {
     remove(id: number, req: any): Promise<{
         message: string;
         ticketCode: string;
+    }>;
+    bulkDeleteByDate(startDate: string, endDate: string, req: any): Promise<{
+        message: string;
+        count: number;
+        period?: undefined;
+    } | {
+        message: string;
+        count: number;
+        period: {
+            startDate: Date;
+            endDate: Date;
+        };
+    }>;
+    bulkDeleteByIDs(ids: number[], req: any): Promise<{
+        message: string;
+        count: number;
+        ids?: undefined;
+    } | {
+        message: string;
+        count: number;
+        ids: number[];
     }>;
 }

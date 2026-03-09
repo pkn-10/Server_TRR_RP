@@ -15,6 +15,7 @@ export interface LineUserProfile {
     statusMessage?: string;
 }
 export declare class LineOAuthService {
+    private readonly logger;
     private readonly lineAuthEndpoint;
     private readonly lineTokenEndpoint;
     private readonly lineTokenInfoEndpoint;
@@ -27,5 +28,4 @@ export declare class LineOAuthService {
     verifyRedirectUri(): boolean;
     private getRedirectUri;
     private generateState;
-    private logDebug;
 }

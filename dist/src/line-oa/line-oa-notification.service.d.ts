@@ -26,6 +26,7 @@ export interface RepairStatusUpdatePayload {
     problemDescription?: string;
     status: string;
     remark?: string;
+    staffName?: string;
     technicianNames?: string[];
     nextStep?: string;
     updatedAt?: Date;
@@ -142,6 +143,7 @@ export declare class LineOANotificationService {
         imageUrl?: string;
         createdAt: Date;
         remark?: string;
+        staffName?: string;
     }): Promise<{
         success: boolean;
     }>;

@@ -61,38 +61,22 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         repairs: {
             key: 'repairs',
             label: 'การแจ้งซ่อม',
-            icon: 'Wrench',
-            description: 'ข้อมูลการแจ้งซ่อมทั้งหมด รวมถึง logs และ attachments',
-        },
-        tickets: {
-            key: 'tickets',
-            label: 'Tickets',
-            icon: 'Ticket',
-            description: 'ระบบ Ticket เดิม รวมถึง logs และ attachments',
         },
         loans: {
             key: 'loans',
             label: 'การยืม',
-            icon: 'Clock',
-            description: 'ข้อมูลการยืมอุปกรณ์ทั้งหมด',
         },
         notifications: {
             key: 'notifications',
             label: 'การแจ้งเตือน',
-            icon: 'Bell',
-            description: 'การแจ้งเตือนทั้งหมด รวมถึง LINE notifications',
         },
         stock: {
             key: 'stock',
             label: 'สต็อก',
-            icon: 'Package',
-            description: 'ข้อมูลสินค้าคงคลังทั้งหมด',
         },
         departments: {
             key: 'departments',
             label: 'แผนก',
-            icon: 'Users',
-            description: 'ข้อมูลแผนกทั้งหมด',
         },
     };
     async getDataTypes() {
@@ -103,9 +87,8 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         }));
     }
     async getDataCounts() {
-        const [repairs, tickets, loans, notifications, lineNotifications, stock, departments] = await Promise.all([
+        const [repairs, loans, notifications, lineNotifications, stock, departments] = await Promise.all([
             this.prisma.repairTicket.count(),
-            this.prisma.ticket.count(),
             this.prisma.loan.count(),
             this.prisma.notification.count(),
             this.prisma.lineNotification.count(),
@@ -114,7 +97,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         ]);
         return {
             repairs,
-            tickets,
             loans,
             notifications: notifications + lineNotifications,
             stock,
@@ -125,7 +107,7 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         if (types.length === 1) {
             const type = types[0];
             const workbook = new ExcelJS.Workbook();
-            workbook.creator = 'TRR System';
+            workbook.creator = 'TRR';
             workbook.created = new Date();
             await this.addSheetForType(workbook, type);
             const buffer = await workbook.xlsx.writeBuffer();
@@ -139,7 +121,7 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         const zip = new AdmZip();
         for (const type of types) {
             const workbook = new ExcelJS.Workbook();
-            workbook.creator = 'TRR System';
+            workbook.creator = 'TRR';
             workbook.created = new Date();
             await this.addSheetForType(workbook, type);
             const buffer = await workbook.xlsx.writeBuffer();
@@ -157,9 +139,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         switch (type) {
             case 'repairs':
                 await this.addRepairsSheet(workbook);
-                break;
-            case 'tickets':
-                await this.addTicketsSheet(workbook);
                 break;
             case 'loans':
                 await this.addLoansSheet(workbook);
@@ -186,7 +165,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
         sheet.columns = [
             { header: 'รหัส', key: 'ticketCode', width: 15 },
             { header: 'ชื่อปัญหา', key: 'problemTitle', width: 30 },
-            { header: 'หมวดหมู่', key: 'problemCategory', width: 15 },
             { header: 'สถานที่', key: 'location', width: 20 },
             { header: 'ผู้แจ้ง', key: 'reporterName', width: 20 },
             { header: 'โทรศัพท์', key: 'reporterPhone', width: 15 },
@@ -200,7 +178,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
             sheet.addRow({
                 ticketCode: repair.ticketCode,
                 problemTitle: repair.problemTitle,
-                problemCategory: repair.problemCategory,
                 location: repair.location,
                 reporterName: repair.reporterName,
                 reporterPhone: repair.reporterPhone || '-',
@@ -208,42 +185,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
                 urgency: repair.urgency,
                 assignees: repair.assignees.map(a => a.user.name).join(', ') || '-',
                 createdAt: repair.createdAt.toISOString(),
-            });
-        });
-    }
-    async addTicketsSheet(workbook) {
-        const sheet = workbook.addWorksheet('Tickets');
-        const tickets = await this.prisma.ticket.findMany({
-            include: {
-                user: { select: { name: true } },
-                assignee: { select: { name: true } },
-            },
-        });
-        sheet.columns = [
-            { header: 'รหัส', key: 'ticketCode', width: 15 },
-            { header: 'หัวข้อ', key: 'title', width: 30 },
-            { header: 'คำอธิบาย', key: 'description', width: 40 },
-            { header: 'หมวดหมู่', key: 'category', width: 15 },
-            { header: 'สถานที่', key: 'location', width: 20 },
-            { header: 'สถานะ', key: 'status', width: 12 },
-            { header: 'ความสำคัญ', key: 'priority', width: 12 },
-            { header: 'ผู้แจ้ง', key: 'user', width: 20 },
-            { header: 'ผู้รับผิดชอบ', key: 'assignee', width: 20 },
-            { header: 'วันที่สร้าง', key: 'createdAt', width: 20 },
-        ];
-        this.styleHeaderRow(sheet);
-        tickets.forEach(ticket => {
-            sheet.addRow({
-                ticketCode: ticket.ticketCode,
-                title: ticket.title,
-                description: ticket.description,
-                category: ticket.category,
-                location: ticket.location,
-                status: ticket.status,
-                priority: ticket.priority,
-                user: ticket.user?.name || ticket.guestName || '-',
-                assignee: ticket.assignee?.name || '-',
-                createdAt: ticket.createdAt.toISOString(),
             });
         });
     }
@@ -315,7 +256,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
             { header: 'ชื่อ', key: 'name', width: 30 },
             { header: 'จำนวน', key: 'quantity', width: 10 },
             { header: 'หมวดหมู่', key: 'category', width: 20 },
-            { header: 'สถานที่เก็บ', key: 'location', width: 20 },
             { header: 'วันที่สร้าง', key: 'createdAt', width: 20 },
         ];
         this.styleHeaderRow(sheet);
@@ -325,7 +265,6 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
                 name: item.name,
                 quantity: item.quantity,
                 category: item.category || '-',
-                location: item.location || '-',
                 createdAt: item.createdAt.toISOString(),
             });
         });
@@ -378,19 +317,12 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
                         publicIdsToDelete.push(publicId);
                 }
             }
-            else if (type === 'tickets') {
-                const attachments = await this.prisma.attachment.findMany({ select: { fileUrl: true } });
-                for (const att of attachments) {
-                    const publicId = this.cloudinary.extractPublicIdFromUrl(att.fileUrl);
-                    if (publicId)
-                        publicIdsToDelete.push(publicId);
-                }
-            }
         }
         await this.prisma.$transaction(async (tx) => {
             for (const type of types) {
                 switch (type) {
                     case 'repairs':
+                        const assignmentHistory = await tx.repairAssignmentHistory.deleteMany();
                         const repairLogs = await tx.repairTicketLog.deleteMany();
                         const repairAssignees = await tx.repairTicketAssignee.deleteMany();
                         const repairAttachmentsDeleted = await tx.repairAttachment.deleteMany();
@@ -399,14 +331,7 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
                         deleted['repairLogs'] = repairLogs.count;
                         deleted['repairAssignees'] = repairAssignees.count;
                         deleted['repairAttachments'] = repairAttachmentsDeleted.count;
-                        break;
-                    case 'tickets':
-                        const ticketLogs = await tx.ticketLog.deleteMany();
-                        const attachmentsDeleted = await tx.attachment.deleteMany();
-                        const tickets = await tx.ticket.deleteMany();
-                        deleted['tickets'] = tickets.count;
-                        deleted['ticketLogs'] = ticketLogs.count;
-                        deleted['attachments'] = attachmentsDeleted.count;
+                        deleted['assignmentHistory'] = assignmentHistory.count;
                         break;
                     case 'loans':
                         const loans = await tx.loan.deleteMany();
@@ -419,7 +344,9 @@ let DataManagementService = DataManagementService_1 = class DataManagementServic
                         deleted['lineNotifications'] = lineNotifications.count;
                         break;
                     case 'stock':
+                        const stockTransactions = await tx.stockTransaction.deleteMany();
                         const stock = await tx.stockItem.deleteMany();
+                        deleted['stockTransactions'] = stockTransactions.count;
                         deleted['stock'] = stock.count;
                         break;
                     case 'departments':

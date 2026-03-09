@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const data_management_controller_1 = require("./data-management.controller");
 const data_management_service_1 = require("./data-management.service");
 const prisma_module_1 = require("../prisma/prisma.module");
+const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
 let DataManagementModule = class DataManagementModule {
 };
 exports.DataManagementModule = DataManagementModule;
 exports.DataManagementModule = DataManagementModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, cloudinary_module_1.CloudinaryModule],
         controllers: [data_management_controller_1.DataManagementController],
         providers: [data_management_service_1.DataManagementService],
         exports: [data_management_service_1.DataManagementService],

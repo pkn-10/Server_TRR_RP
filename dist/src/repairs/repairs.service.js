@@ -160,7 +160,6 @@ let RepairsService = RepairsService_1 = class RepairsService {
                 reporterDepartment: dto.reporterDepartment || null,
                 reporterPhone: dto.reporterPhone || null,
                 reporterLineId: dto.reporterLineId || null,
-                problemCategory: dto.problemCategory,
                 problemTitle: dto.problemTitle,
                 problemDescription: dto.problemDescription || null,
                 location: dto.location,
@@ -259,6 +258,11 @@ let RepairsService = RepairsService_1 = class RepairsService {
                 attachments: { orderBy: { id: 'asc' }, take: 1 },
             },
         });
+        const updatedBy = updatedById ? await this.prisma.user.findUnique({
+            where: { id: updatedById },
+            select: { name: true }
+        }) : null;
+        const staffName = updatedBy?.name;
         if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status) {
             if (!this.validateStatusTransition(originalTicket.status, dto.status)) {
                 throw new common_1.BadRequestException(`ไม่สามารถเปลี่ยนสถานะจาก ${originalTicket.status} เป็น ${dto.status} ได้`);
@@ -303,8 +307,8 @@ let RepairsService = RepairsService_1 = class RepairsService {
                             userId,
                         })),
                     });
-                    const addedIds = dto.assigneeIds.filter((id) => !previousAssigneeIds.includes(id));
-                    const removedIds = previousAssigneeIds.filter((id) => !dto.assigneeIds.includes(id));
+                    const addedIds = (dto.assigneeIds || []).filter((id) => !previousAssigneeIds.includes(id));
+                    const removedIds = previousAssigneeIds.filter((id) => !(dto.assigneeIds || []).includes(id));
                     const historyData = [];
                     for (const uid of addedIds) {
                         historyData.push({
@@ -429,6 +433,9 @@ let RepairsService = RepairsService_1 = class RepairsService {
                 },
             });
             const cachedImageUrl = originalTicket?.attachments?.[0]?.fileUrl;
+            const isNewMessageToReporter = !!(dto.messageToReporter &&
+                dto.messageToReporter.trim() !== '' &&
+                dto.messageToReporter !== originalTicket?.messageToReporter);
             try {
                 if (dto.assigneeIds !== undefined) {
                     const newAssigneeIds = dto.assigneeIds.filter((id) => !previousAssigneeIds.includes(id));
@@ -516,9 +523,13 @@ let RepairsService = RepairsService_1 = class RepairsService {
                         problemImageUrl: cachedImageUrl,
                     }).then(() => this.logger.log(`Notified technician ${assignee.userId} for cancellation: ${ticket.ticketCode}`))));
                 }
-                if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status) {
+                const isTerminalStatus = dto.status === 'COMPLETED' || dto.status === 'CANCELLED';
+                const hasNewAssignees = dto.assigneeIds !== undefined &&
+                    dto.assigneeIds.some((id) => !previousAssigneeIds.includes(id));
+                const shouldNotifyReporter = isTerminalStatus || isNewMessageToReporter || hasNewAssignees;
+                if (dto.status !== undefined && originalTicket && dto.status !== originalTicket.status && shouldNotifyReporter) {
                     const technicianNames = ticket.assignees.map(a => a.user.name);
-                    let remarkMessage = dto.messageToReporter || undefined;
+                    let remarkMessage = isNewMessageToReporter ? dto.messageToReporter : undefined;
                     if (dto.status === 'COMPLETED' && dto.completionReport) {
                         remarkMessage = `รายงานการซ่อม: ${dto.completionReport}`;
                     }
@@ -532,6 +543,7 @@ let RepairsService = RepairsService_1 = class RepairsService {
                             imageUrl: cachedImageUrl,
                             createdAt: ticket.createdAt,
                             remark: remarkMessage,
+                            staffName,
                         });
                         this.logger.log(`Notified reporter directly for: ${ticket.ticketCode}`);
                     }
@@ -541,13 +553,14 @@ let RepairsService = RepairsService_1 = class RepairsService {
                             problemTitle: ticket.problemTitle,
                             status: dto.status,
                             remark: remarkMessage,
+                            staffName,
                             technicianNames,
                             updatedAt: new Date(),
                         });
                         this.logger.log(`Notified reporter via userId for: ${ticket.ticketCode}`);
                     }
                 }
-                if (dto.messageToReporter && !(dto.status !== undefined && originalTicket && dto.status !== originalTicket.status)) {
+                if (isNewMessageToReporter && !(dto.status !== undefined && originalTicket && dto.status !== originalTicket.status)) {
                     if (originalTicket?.reporterLineUserId) {
                         await this.lineNotificationService.notifyReporterDirectly(originalTicket.reporterLineUserId, {
                             ticketCode: ticket.ticketCode,
@@ -558,6 +571,7 @@ let RepairsService = RepairsService_1 = class RepairsService {
                             imageUrl: cachedImageUrl,
                             createdAt: ticket.createdAt,
                             remark: dto.messageToReporter,
+                            staffName,
                         });
                     }
                     else {
@@ -567,6 +581,7 @@ let RepairsService = RepairsService_1 = class RepairsService {
                             problemTitle: ticket.problemTitle,
                             status: ticket.status,
                             remark: dto.messageToReporter,
+                            staffName,
                             technicianNames,
                             updatedAt: new Date(),
                         });
@@ -605,6 +620,49 @@ let RepairsService = RepairsService_1 = class RepairsService {
         this.logger.log(`Hard deleted repair ticket: ${ticket.ticketCode}`);
         return { message: 'Deleted successfully', ticketCode: ticket.ticketCode };
     }
+    async removeByDateRange(startDate, endDate) {
+        const count = await this.prisma.repairTicket.count({
+            where: {
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+        });
+        if (count === 0) {
+            return { message: 'No records found in this range', count: 0 };
+        }
+        const result = await this.prisma.repairTicket.deleteMany({
+            where: {
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+        });
+        this.logger.log(`Bulk deleted ${result.count} repair tickets from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+        return {
+            message: 'Bulk deletion successful',
+            count: result.count,
+            period: { startDate, endDate }
+        };
+    }
+    async removeMany(ids) {
+        if (!ids || ids.length === 0) {
+            return { message: 'No IDs provided', count: 0 };
+        }
+        const result = await this.prisma.repairTicket.deleteMany({
+            where: {
+                id: { in: ids },
+            },
+        });
+        this.logger.log(`Bulk deleted ${result.count} repair tickets by IDs`);
+        return {
+            message: 'Bulk deletion successful',
+            count: result.count,
+            ids,
+        };
+    }
     async getStatistics() {
         const stats = await this.prisma.repairTicket.groupBy({
             by: ['status'],
@@ -635,7 +693,10 @@ let RepairsService = RepairsService_1 = class RepairsService {
             endDate.setHours(23, 59, 59, 999);
         }
         else if (filter === 'week') {
+            const day = targetDate.getDay();
+            const diffToMonday = day === 0 ? -6 : 1 - day;
             startDate = new Date(targetDate);
+            startDate.setDate(targetDate.getDate() + diffToMonday);
             startDate.setHours(0, 0, 0, 0);
             endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
@@ -684,6 +745,7 @@ let RepairsService = RepairsService_1 = class RepairsService {
         return {
             all: {
                 total: allTotal,
+                pending: getCount(allStats, client_1.RepairTicketStatus.PENDING),
                 inProgress: getCount(allStats, client_1.RepairTicketStatus.IN_PROGRESS),
                 completed: getCount(allStats, client_1.RepairTicketStatus.COMPLETED),
                 cancelled: getCount(allStats, client_1.RepairTicketStatus.CANCELLED),
@@ -711,9 +773,10 @@ let RepairsService = RepairsService_1 = class RepairsService {
                 endDate.setHours(23, 59, 59, 999);
             }
             else if (filter === 'week') {
-                const dayOfWeek = date.getDay();
+                const day = date.getDay();
+                const diffToMonday = day === 0 ? -6 : 1 - day;
                 startDate = new Date(date);
-                startDate.setDate(date.getDate() - dayOfWeek);
+                startDate.setDate(date.getDate() + diffToMonday);
                 startDate.setHours(0, 0, 0, 0);
                 endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
@@ -794,6 +857,13 @@ let RepairsService = RepairsService_1 = class RepairsService {
             where.urgency = urgency;
         if (assignedTo)
             where.assignedTo = assignedTo;
+        if (params.startDate || params.endDate) {
+            where.createdAt = {};
+            if (params.startDate)
+                where.createdAt.gte = params.startDate;
+            if (params.endDate)
+                where.createdAt.lte = params.endDate;
+        }
         return this.prisma.repairTicket.findMany({
             where,
             take: limit,

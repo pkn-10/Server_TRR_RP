@@ -18,7 +18,6 @@ class CreateRepairTicketDto {
     reporterPhone;
     reporterLineId;
     accessToken;
-    problemCategory;
     problemTitle;
     problemDescription;
     location;
@@ -56,10 +55,6 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateRepairTicketDto.prototype, "accessToken", void 0);
-__decorate([
-    (0, class_validator_1.IsEnum)(client_1.ProblemCategory),
-    __metadata("design:type", String)
-], CreateRepairTicketDto.prototype, "problemCategory", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'กรุณาระบุหัวข้อปัญหา' }),

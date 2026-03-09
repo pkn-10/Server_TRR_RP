@@ -3,30 +3,7 @@ export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
     getAllUsers(page?: number, limit?: number, roles?: string): Promise<{
-        data: {
-            lineUserId: string | null;
-            displayName: string | null | undefined;
-            pictureUrl: string | null | undefined;
-            id: number;
-            name: string;
-            email: string;
-            role: import(".prisma/client").$Enums.Role;
-            department: string | null;
-            phoneNumber: string | null;
-            lineId: string | null;
-            profilePicture: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            lineOALink: {
-                displayName: string | null;
-                pictureUrl: string | null;
-                lineUserId: string | null;
-            } | null;
-            _count: {
-                assigned: number;
-                tickets: number;
-            };
-        }[];
+        data: any[];
         pagination: {
             total: number;
             page: number;
@@ -34,93 +11,15 @@ export declare class UsersService {
             totalPages: number;
         };
     }>;
-    getITStaff(): Promise<{
-        lineUserId: string | null;
-        displayName: string | null | undefined;
-        pictureUrl: string | null | undefined;
-        id: number;
-        name: string;
-        email: string;
-        role: import(".prisma/client").$Enums.Role;
-        department: string | null;
-        phoneNumber: string | null;
-        lineId: string | null;
-        profilePicture: string | null;
-        lineOALink: {
-            displayName: string | null;
-            pictureUrl: string | null;
-            lineUserId: string | null;
-        } | null;
-    }[]>;
-    getUserById(id: number): Promise<{
-        lineUserId: string | null;
-        displayName: string | null | undefined;
-        pictureUrl: string | null | undefined;
-        id: number;
-        name: string;
-        email: string;
-        role: import(".prisma/client").$Enums.Role;
-        department: string | null;
-        phoneNumber: string | null;
-        lineId: string | null;
-        profilePicture: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        lineOALink: {
-            displayName: string | null;
-            pictureUrl: string | null;
-            lineUserId: string | null;
-        } | null;
-        _count: {
-            assigned: number;
-            tickets: number;
-        };
-    }>;
-    updateUser(id: number, data: any): Promise<{
-        lineUserId: string | null;
-        displayName: string | null | undefined;
-        pictureUrl: string | null | undefined;
-        id: number;
-        name: string;
-        email: string;
-        role: import(".prisma/client").$Enums.Role;
-        department: string | null;
-        phoneNumber: string | null;
-        lineId: string | null;
-        profilePicture: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        lineOALink: {
-            displayName: string | null;
-            pictureUrl: string | null;
-            lineUserId: string | null;
-        } | null;
-    }>;
+    getITStaff(): Promise<any[]>;
+    getUserById(id: number): Promise<any>;
+    updateUser(id: number, data: any): Promise<any>;
     deleteUser(id: number): Promise<{
         id: number;
         name: string;
         email: string;
     }>;
-    searchUsers(query: string): Promise<{
-        lineUserId: string | null;
-        displayName: string | null | undefined;
-        pictureUrl: string | null | undefined;
-        id: number;
-        name: string;
-        email: string;
-        role: import(".prisma/client").$Enums.Role;
-        department: string | null;
-        phoneNumber: string | null;
-        lineId: string | null;
-        profilePicture: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        lineOALink: {
-            displayName: string | null;
-            pictureUrl: string | null;
-            lineUserId: string | null;
-        } | null;
-    }[]>;
+    searchUsers(query: string): Promise<any[]>;
     createUser(data: any): Promise<{
         id: number;
         name: string;
@@ -167,4 +66,5 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    private mapUserLineInfo;
 }

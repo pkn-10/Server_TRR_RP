@@ -43,11 +43,11 @@ export declare class LineOALinkingService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LineLinkStatus;
-        userId: number;
         displayName: string | null;
+        userId: number;
         pictureUrl: string | null;
         lineUserId: string | null;
+        status: import(".prisma/client").$Enums.LineLinkStatus;
         verificationToken: string | null;
         verificationExpiry: Date | null;
     }>;

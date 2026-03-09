@@ -77,14 +77,14 @@ let AuthService = AuthService_1 = class AuthService {
                 },
             });
             return {
-                message: 'Register success',
+                message: 'ลงทะเบียนสำเร็จ',
                 userId: user.id,
                 role: user.role,
             };
         }
         catch (error) {
             if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-                throw new common_1.BadRequestException('Email already exists');
+                throw new common_1.BadRequestException('อีเมลถูกใช้แล้ว');
             }
             throw error;
         }
@@ -94,11 +94,11 @@ let AuthService = AuthService_1 = class AuthService {
             where: { email: dto.email },
         });
         if (!user) {
-            throw new common_1.UnauthorizedException('Email or password incorrect');
+            throw new common_1.UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
         }
         const isMatch = await bcrypt.compare(dto.password, user.password);
         if (!isMatch) {
-            throw new common_1.UnauthorizedException('Email or password incorrect');
+            throw new common_1.UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
         }
         const payload = {
             sub: user.id,
@@ -108,7 +108,7 @@ let AuthService = AuthService_1 = class AuthService {
             access_token: this.jwtService.sign(payload),
             userId: user.id,
             role: user.role,
-            message: 'Login success',
+            message: 'เข้าสู่ระบบสำเร็จ',
         };
     }
     getLineAuthUrl() {
@@ -116,10 +116,10 @@ let AuthService = AuthService_1 = class AuthService {
     }
     async lineCallback(code, state) {
         if (!code) {
-            console.error('[LINE Auth] No authorization code provided');
-            throw new common_1.BadRequestException('Authorization code is required');
+            this.logger.error('[LINE Auth] ไม่พบ authorization code');
+            throw new common_1.BadRequestException('ไม่พบ authorization code');
         }
-        this.logger.log('[LINE Auth] Processing callback');
+        this.logger.log('[LINE Auth] กำลังจัดการ callback');
         try {
             const tokenResponse = await this.lineOAuth.exchangeCodeForToken(code);
             const lineAccessToken = tokenResponse.access_token;
@@ -148,7 +148,7 @@ let AuthService = AuthService_1 = class AuthService {
                         },
                     },
                 });
-                this.logger.log(`[LINE Auth] New user created: ${user.id}`);
+                this.logger.log(`[LINE Auth] สร้างผู้ใช้ใหม่: ${user.id}`);
             }
             else {
                 if (!user.lineId) {
@@ -168,20 +168,20 @@ let AuthService = AuthService_1 = class AuthService {
                 access_token: this.jwtService.sign(payload),
                 userId: user.id,
                 role: user.role,
-                message: 'LOGIN success via LINE',
+                message: 'เข้าสู่ระบบสำเร็จผ่าน LINE',
             };
-            this.logger.log(`[LINE Auth] Authentication successful for user ${user.id}`);
+            this.logger.log(`[LINE Auth] การยืนยันตัวตนสำเร็จสำหรับผู้ใช้ ${user.id}`);
             return result;
         }
         catch (error) {
-            this.logger.error('[LINE Auth] Callback error:', error.message);
+            this.logger.error('[LINE Auth] การยืนยันตัวตนผ่าน LINE ไม่สำเร็จ:', error.message);
             throw error;
         }
     }
     async getProfile(userId) {
         try {
             if (!userId || typeof userId !== 'number') {
-                throw new common_1.BadRequestException('Invalid user ID');
+                throw new common_1.BadRequestException('IDผู้ใช้ไม่ถูกต้อง');
             }
             const user = await this.prisma.user.findUnique({
                 where: { id: userId },
@@ -190,20 +190,18 @@ let AuthService = AuthService_1 = class AuthService {
                     name: true,
                     email: true,
                     role: true,
-                    department: true,
                     phoneNumber: true,
-                    lineId: true,
                     profilePicture: true,
                     createdAt: true,
                 },
             });
             if (!user) {
-                throw new common_1.UnauthorizedException('User not found');
+                throw new common_1.UnauthorizedException('ไม่พบผู้ใช้');
             }
             return user;
         }
         catch (error) {
-            this.logger.error('Error in getProfile:', error.message);
+            this.logger.error('[ดึงโปรไฟล์ข้อมูลเบื้องต้นของผู้ใช้] เกิดข้อผิดพลาด:', error.message);
             throw error;
         }
     }
@@ -212,18 +210,14 @@ let AuthService = AuthService_1 = class AuthService {
             where: { id: userId },
             data: {
                 ...(data.name && { name: data.name }),
-                ...(data.department && { department: data.department }),
                 ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
-                ...(data.lineId && { lineId: data.lineId }),
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
                 role: true,
-                department: true,
                 phoneNumber: true,
-                lineId: true,
                 profilePicture: true,
                 createdAt: true,
             },
@@ -240,7 +234,7 @@ let AuthService = AuthService_1 = class AuthService {
                 await this.cloudinary.deleteFile(currentUser.profilePictureId);
             }
             catch (error) {
-                console.error('Error deleting old profile picture:', error);
+                this.logger.error('[อัปโหลดและเปลี่ยนแปลงรูปโปรไฟล์] เกิดข้อผิดพลาดในการลบรูปโปรไฟล์เก่า');
             }
         }
         const uploadResult = await this.cloudinary.uploadFile(file.buffer, file.originalname, 'profile-pictures');
@@ -255,9 +249,7 @@ let AuthService = AuthService_1 = class AuthService {
                 name: true,
                 email: true,
                 role: true,
-                department: true,
                 phoneNumber: true,
-                lineId: true,
                 profilePicture: true,
                 createdAt: true,
             },
