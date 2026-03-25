@@ -637,6 +637,8 @@ export class RepairsService {
           
           if (dto.status === 'COMPLETED' && dto.completionReport) {
             remarkMessage = `รายงานการซ่อม: ${dto.completionReport}`;
+          } else if (dto.status === 'CANCELLED' && dto.notes) {
+            remarkMessage = `เหตุผลการยกเลิก: ${dto.notes}`;
           }
 
           // Consolidated: Send only ONE notification to reporter
